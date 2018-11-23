@@ -41,8 +41,8 @@ if settings:get_bool("enable_flashbang_grenade") then
         on_explode = function(pos, player, self)
             for k, v in ipairs(minetest.get_objects_inside_radius(pos, 15)) do
                 if v:is_player() and v:get_hp() > 0 then
-                    local playerdir = vector.round(vector.normalize(v:get_look_dir()))
-                    local grenadedir = vector.round(vector.normalize(vector.direction(v:get_pos(), pos)))
+                    local playerdir = vector.round(v:get_look_dir())
+                    local grenadedir = vector.round(vector.direction(v:get_pos(), pos))
 
                     if playerdir.x == grenadedir.x and playerdir.z == grenadedir.z then
                         for i = 1, 3, 1 do
