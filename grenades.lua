@@ -18,8 +18,8 @@ if settings:get_bool("enable_regular_grenade") then
                 maxexptime = 0.6,
                 minsize = 5,
                 maxsize = 7,
-                collisiondetection = false,
-                collision_removal = false,
+                collisiondetection = true,
+                collision_removal = true,
                 vertical = false,
                 texture = "grenades_smoke.png",
             })
@@ -55,6 +55,36 @@ if settings:get_bool("enable_flashbang_grenade") then
                         minetest.after(4*i, function() v:hud_remove(key) end)
                     end
                 end
+            end
+        end,
+        timeout = 3
+    })
+end
+
+if settings:get_bool("enable_smoke_grenade") then
+    grenades.register_grenade("smoke_greande", {
+        description = "A smoke grenade (Generates a lot of smoke around the detonation area)",
+        image = "grenades_smoke_grenade.png",
+        on_explode = function(pos, player, self)
+            for i = 0, 5, 1 do
+                minetest.add_particlespawner({
+                    amount = 100,
+                    time = 10,
+                    minpos = vector.subtract(pos, 3.5),
+                    maxpos = vector.add(pos, 3.5),
+                    minvel = {x=0, y=2, z=0},
+                    maxvel = {x=0, y=3, z=0},
+                    minacc = {x=1, y=0.2, z=1},
+                    maxacc = {x=1, y=0.2, z=1},
+                    minexptime = 0.3,
+                    maxexptime = 1,
+                    minsize = 100,
+                    maxsize = 100,
+                    collisiondetection = false,
+                    collision_removal = false,
+                    vertical = false,
+                    texture = "grenades_smoke.png",
+                })
             end
         end,
         timeout = 3

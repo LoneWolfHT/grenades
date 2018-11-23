@@ -67,7 +67,7 @@ function grenades.register_grenade(name, def)
             local player_name = user:get_player_name()
             local inv = user:get_inventory()
 
-            grenade = throw_grenade("grenades:grenade_"..name, user)
+            local grenade = throw_grenade("grenades:grenade_"..name, user)
             grenade.timer = 0
             grenade.thrower_name = player_name
 

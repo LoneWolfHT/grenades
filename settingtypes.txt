@@ -1,5 +1,8 @@
-#Add a regular grenade to the world
+#Add a regular grenade
 enable_regular_grenade (Add a regular grenade to the world) bool false
 
-#Add a flashbang grenade to the world
+#Add a flashbang grenade
 enable_flashbang_grenade (Add a flashbang grenade to the world) bool false
+
+#Add a smoke grenade
+enable_smoke_grenade (Add a smoke grenade to the world) bool false
