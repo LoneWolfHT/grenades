@@ -65,6 +65,7 @@ if not flash or flash == true then
                 if v:is_player() and v:get_hp() > 0 then
                     local playerdir = vector.round(v:get_look_dir())
                     local grenadedir = vector.round(vector.direction(v:get_pos(), pos))
+                    local name = v:get_player_name()
 
                     if playerdir.x == grenadedir.x and playerdir.z == grenadedir.z then
                         for i = 1, 3, 1 do
@@ -78,7 +79,11 @@ if not flash or flash == true then
                                 offset = {x=0, y=0}
                             })
 
-                            minetest.after(1.7*i, function() v:hud_remove(key) end)
+                            minetest.after(1.6*i, function()
+                                if minetest.get_player_by_name(name) then
+                                    minetest.get_player_by_name(name):hud_remove(key)
+                                end
+                            end)
                         end
                     end
                 end
