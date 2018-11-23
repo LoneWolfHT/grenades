@@ -14,7 +14,6 @@ local function throw_grenade(name, player)
 end
 
 function grenades.register_grenade(name, def)
-    minetest.log("\n\n\nREGISTERING "..name.."\n\n\n\n")
     local grenade_entity = {
         physical = true,
         timer = 0,
@@ -55,6 +54,7 @@ function grenades.register_grenade(name, def)
         range = 4,
         paramtype = "light",
         sunlight_propagates = true,
+        walkable = false,
         drawtype = "plantlike",
         selection_box = {
             type = "fixed",
@@ -67,11 +67,17 @@ function grenades.register_grenade(name, def)
             local player_name = user:get_player_name()
             local inv = user:get_inventory()
 
-            local grenade = throw_grenade("grenades:grenade_"..name, user)
-            grenade.timer = 0
-            grenade.thrower_name = player_name
+            if pointed_thing.type ~= "node" then
+                local grenade = throw_grenade("grenades:grenade_"..name, user)
+                grenade.timer = 0
+                grenade.thrower_name = player_name
 
-            inv:remove_item("main", "grenades:grenade_"..name)
+                if not minetest.setting_getbool("creative_mode") then
+                    itemstack = ""
+                end
+            end
+
+            return itemstack
         end
     })
 end
