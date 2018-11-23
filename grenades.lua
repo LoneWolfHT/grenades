@@ -4,6 +4,17 @@ local regular = settings:get_bool("enable_regular_grenade")
 local flash = settings:get_bool("enable_flashbang_grenade")
 local smoke = settings:get_bool("enable_smoke_grenade")
 
+minetest.register_craftitem("grenades:gun_powder", {
+    description = "A dark powder used for crafting smoke grenades",
+    inventory_image = "grenades_gun_powder.png"
+})
+
+minetest.register_craft({
+    type = "shapeless",
+    output = "grenades:gun_powder",
+    recipe = {"default:coal_lump", "default:coal_lump", "default:coal_lump", "default:coal_lump"},
+})
+
 if not regular or regular == true then
     grenades.register_grenade("regular", {
         description = "A regular grenade (Kills anyone near where it explodes)",
@@ -36,6 +47,11 @@ if not regular or regular == true then
                 end
             end
         end,
+        recipe = {
+            {"", "default:steel_ingot", ""},
+            {"default:steel_ingot", "default:coal_lump", "default:steel_ingot"},
+            {"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"}
+        },
         timeout = 3
     })
 end
@@ -68,12 +84,17 @@ if not flash or flash == true then
                 end
             end
         end,
+        recipe = {
+            {"", "default:steel_ingot", ""},
+            {"default:steel_ingot", "default:torch", "default:steel_ingot"},
+            {"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"}
+        },
         timeout = 3
     })
 end
 
 if not smoke or smoke == true then
-    grenades.register_grenade("smoke_greande", {
+    grenades.register_grenade("smoke", {
         description = "A smoke grenade (Generates a lot of smoke around the detonation area)",
         image = "grenades_smoke_grenade.png",
         on_explode = function(pos, player, self)
@@ -98,6 +119,11 @@ if not smoke or smoke == true then
                 })
             end
         end,
+        recipe = {
+            {"", "default:steel_ingot", ""},
+            {"default:steel_ingot", "grenades:gun_powder", "default:steel_ingot"},
+            {"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"}
+        },
         timeout = 3
     })
 end

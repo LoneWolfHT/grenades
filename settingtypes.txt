@@ -6,3 +6,6 @@ enable_flashbang_grenade (Add a flashbang grenade to the world) bool true
 
 #Add a smoke grenade
 enable_smoke_grenade (Add a smoke grenade to the world) bool true
+
+#Enable Recipes
+enable_grenade_recipes (Gives enabled grenades cafting recipes) bool true

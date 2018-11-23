@@ -1,3 +1,5 @@
+local settings = minetest.settings
+
 grenades = {}
 
 local function throw_grenade(name, player)
@@ -14,6 +16,8 @@ local function throw_grenade(name, player)
 end
 
 function grenades.register_grenade(name, def)
+    if not def.type then def.type = "shaped" end
+
     local grenade_entity = {
         physical = true,
         timer = 0,
@@ -80,6 +84,15 @@ function grenades.register_grenade(name, def)
             return itemstack
         end
     })
+
+    if def.recipe and (not settings:get_bool("enable_grenade_recipes") or 
+        settings:get_bool("enable_grenade_recipes") == true) then
+        minetest.register_craft({
+            type = def.type,
+            output = "grenades:grenade_"..name,
+            recipe = def.recipe
+        })
+    end
 end
 
 dofile(minetest.get_modpath("grenades").."/grenades.lua")
