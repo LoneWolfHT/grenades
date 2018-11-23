@@ -39,20 +39,25 @@ if settings:get_bool("enable_flashbang_grenade") then
         description = "A flashbang grenade (Blinds all who look at the explosion)",
         image = "grenades_flashbang.png",
         on_explode = function(pos, player, self)
-            for k, v in ipairs(minetest.get_objects_inside_radius(pos, 6)) do
+            for k, v in ipairs(minetest.get_objects_inside_radius(pos, 15)) do
                 if v:is_player() and v:get_hp() > 0 then
-                    for i = 1, 3, 1 do
-                        local key = v:hud_add({
-                            hud_elem_type = "image",
-                            position = {x=0, 0},
-                            name = "death_list_hud",
-                            scale = {x=1000, y=1000},
-                            text = "grenades_white_"..tostring(i)..".png",
-                            alignment = {x=0, y=0},
-                            offset = {x=0, y=0}
-                        })
+                    local playerdir = vector.floor(vector.normalize(v:get_look_dir()))
+                    local grenadedir = vector.floor(vector.normalize(vector.direction(v:get_pos(), pos)))
 
-                        minetest.after(4*i, function() v:hud_remove(key) end)
+                    if playerdir.x == grenadedir.x and playerdir.z == grenadedir.z then
+                        for i = 1, 3, 1 do
+                            local key = v:hud_add({
+                                hud_elem_type = "image",
+                                position = {x=0, 0},
+                                name = "death_list_hud",
+                                scale = {x=1000, y=1000},
+                                text = "grenades_white_"..tostring(i)..".png",
+                                alignment = {x=0, y=0},
+                                offset = {x=0, y=0}
+                            })
+
+                            minetest.after(4*i, function() v:hud_remove(key) end)
+                        end
                     end
                 end
             end
