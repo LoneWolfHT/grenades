@@ -1,32 +1,38 @@
 local settings = minetest.settings
 
-if settings:get_bool("enable_regular_grenade") then
+local regular = settings:get_bool("enable_regular_grenade")
+local flash = settings:get_bool("enable_flashbang_grenade")
+local smoke = settings:get_bool("enable_smoke_grenade")
+
+if not regular or regular == true then
     grenades.register_grenade("regular", {
         description = "A regular grenade (Kills anyone near where it explodes)",
         image = "grenades_regular.png",
         on_explode = function(pos, player, self)
+            local radius = 3
+
             minetest.add_particlespawner({
                 amount = 20,
                 time = 0.5,
-                minpos = vector.subtract(pos, 2.3),
-                maxpos = vector.add(pos, 2.3),
+                minpos = vector.subtract(pos, radius),
+                maxpos = vector.add(pos, radius),
                 minvel = {x=0, y=5, z=0},
                 maxvel = {x=0, y=7, z=0},
                 minacc = {x=0, y=1, z=0},
                 maxacc = {x=0, y=1, z=0},
                 minexptime = 0.3,
                 maxexptime = 0.6,
-                minsize = 5,
-                maxsize = 7,
+                minsize = 7,
+                maxsize = 10,
                 collisiondetection = true,
-                collision_removal = true,
+                collision_removal = false,
                 vertical = false,
                 texture = "grenades_smoke.png",
             })
 
-            for k, v in ipairs(minetest.get_objects_inside_radius(pos, 2.3)) do
+            for k, v in ipairs(minetest.get_objects_inside_radius(pos, radius)) do
                 if v:is_player() and v:get_hp() > 0 then
-                    v:punch(player, 2, {damage_groups = {fleshy = 20}}, nil)
+                    v:punch(player, 2, {damage_groups = {fleshy = 20-vector.distance(pos, v:get_pos())}}, nil)
                 end
             end
         end,
@@ -34,7 +40,7 @@ if settings:get_bool("enable_regular_grenade") then
     })
 end
 
-if settings:get_bool("enable_flashbang_grenade") then
+if not flash or flash == true then
     grenades.register_grenade("flashbang", {
         description = "A flashbang grenade (Blinds all who look at the explosion)",
         image = "grenades_flashbang.png",
@@ -56,7 +62,7 @@ if settings:get_bool("enable_flashbang_grenade") then
                                 offset = {x=0, y=0}
                             })
 
-                            minetest.after(4*i, function() v:hud_remove(key) end)
+                            minetest.after(1.7*i, function() v:hud_remove(key) end)
                         end
                     end
                 end
@@ -66,7 +72,7 @@ if settings:get_bool("enable_flashbang_grenade") then
     })
 end
 
-if settings:get_bool("enable_smoke_grenade") then
+if not smoke or smoke == true then
     grenades.register_grenade("smoke_greande", {
         description = "A smoke grenade (Generates a lot of smoke around the detonation area)",
         image = "grenades_smoke_grenade.png",
