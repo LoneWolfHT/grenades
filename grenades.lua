@@ -4,22 +4,16 @@ local regular = settings:get_bool("enable_regular_grenade")
 local flash = settings:get_bool("enable_flashbang_grenade")
 local smoke = settings:get_bool("enable_smoke_grenade")
 
-minetest.register_craftitem("grenades:gun_powder", {
-    description = "A dark powder used for crafting smoke grenades",
-    inventory_image = "grenades_gun_powder.png"
-})
 
-minetest.register_craft({
-    type = "shapeless",
-    output = "grenades:gun_powder",
-    recipe = {"default:coal_lump", "default:coal_lump", "default:coal_lump", "default:coal_lump"},
-})
+-- Regular Grenade
 
 if not regular or regular == true then
     grenades.register_grenade("regular", {
         description = "A regular grenade (Kills anyone near where it explodes)",
         image = "grenades_regular.png",
-        on_explode = function(pos, player, self)
+        on_explode = function(pos, name)
+            local player = minetest.get_player_by_name(name)
+
             local radius = 3
 
             minetest.add_particlespawner({
@@ -47,25 +41,21 @@ if not regular or regular == true then
                 end
             end
         end,
-        recipe = {
-            {"", "default:steel_ingot", ""},
-            {"default:steel_ingot", "default:coal_lump", "default:steel_ingot"},
-            {"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"}
-        },
-        timeout = 3
     })
 end
+
+-- Flashbang Grenade
 
 if not flash or flash == true then
     grenades.register_grenade("flashbang", {
         description = "A flashbang grenade (Blinds all who look at the explosion)",
         image = "grenades_flashbang.png",
-        on_explode = function(pos, player, self)
+        on_explode = function(pos, name)
             for k, v in ipairs(minetest.get_objects_inside_radius(pos, 15)) do
                 if v:is_player() and v:get_hp() > 0 then
                     local playerdir = vector.round(v:get_look_dir())
                     local grenadedir = vector.round(vector.direction(v:get_pos(), pos))
-                    local name = v:get_player_name()
+                    local pname = v:get_player_name()
 
                     if playerdir.x == grenadedir.x and playerdir.z == grenadedir.z then
                         for i = 1, 3, 1 do
@@ -80,29 +70,26 @@ if not flash or flash == true then
                             })
 
                             minetest.after(1.6*i, function()
-                                if minetest.get_player_by_name(name) then
-                                    minetest.get_player_by_name(name):hud_remove(key)
+                                if minetest.get_player_by_name(pname) then
+                                    minetest.get_player_by_name(pname):hud_remove(key)
                                 end
                             end)
                         end
                     end
+
                 end
             end
         end,
-        recipe = {
-            {"", "default:steel_ingot", ""},
-            {"default:steel_ingot", "default:torch", "default:steel_ingot"},
-            {"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"}
-        },
-        timeout = 3
     })
 end
+
+-- Smoke Grenade
 
 if not smoke or smoke == true then
     grenades.register_grenade("smoke", {
         description = "A smoke grenade (Generates a lot of smoke around the detonation area)",
         image = "grenades_smoke_grenade.png",
-        on_explode = function(pos, player, self)
+        on_explode = function(pos, name)
             for i = 0, 5, 1 do
                 minetest.add_particlespawner({
                     amount = 100,
@@ -124,11 +111,73 @@ if not smoke or smoke == true then
                 })
             end
         end,
-        recipe = {
-            {"", "default:steel_ingot", ""},
-            {"default:steel_ingot", "grenades:gun_powder", "default:steel_ingot"},
-            {"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"}
-        },
-        timeout = 3
+        particle = {
+            image = "grenades_smoke.png",
+            life = 1,
+            size = 4,
+            glow = 0,
+        }
+    })
+end
+
+--
+-- Crafts
+--
+
+if not settings:get_bool("enable_grenade_recipes") or settings:get_bool("enable_grenade_recipes") == true then
+
+    -- Regular Grenade
+
+    if not regular or regular == true then
+        minetest.register_craft({
+            type = "shapeless",
+            output = "grenades:grenade_regular",
+            recipe = {
+                {"", "default:steel_ingot", ""},
+                {"default:steel_ingot", "default:coal_lump", "default:steel_ingot"},
+                {"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"}
+            },
+        })
+    end
+
+    -- Smoke Grenade
+
+    if not smoke or smoke == true then
+        minetest.register_craft({
+            type = "shapeless",
+            output = "grenades:grenade_smoke",
+            recipe = {
+                {"", "default:steel_ingot", ""},
+                {"default:steel_ingot", "grenades:gun_powder", "default:steel_ingot"},
+                {"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"}
+            }
+        })
+    end
+
+    --Flashbang Grenade
+
+    if not flash or flash == true then
+        minetest.register_craft({
+            type = "shapeless",
+            output = "grenades:grenade_flashbang",
+            recipe = {
+                {"", "default:steel_ingot", ""},
+                {"default:steel_ingot", "default:torch", "default:steel_ingot"},
+                {"default:steel_ingot", "default:steel_ingot", "default:steel_ingot"}
+            },
+        })
+    end
+
+    -- Other
+
+    minetest.register_craftitem("grenades:gun_powder", {
+        description = "A dark powder used for crafting some grenades",
+        inventory_image = "grenades_gun_powder.png"
+    })
+
+    minetest.register_craft({
+        type = "shapeless",
+        output = "grenades:gun_powder",
+        recipe = {"default:coal_lump", "default:coal_lump", "default:coal_lump", "default:coal_lump"},
     })
 end

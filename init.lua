@@ -1,5 +1,3 @@
-local settings = minetest.settings
-
 grenades = {}
 
 local function throw_grenade(name, player)
@@ -16,7 +14,7 @@ local function throw_grenade(name, player)
 end
 
 function grenades.register_grenade(name, def)
-    if not def.type then def.type = "shaped" end
+    if not def.timeout then def.timeout = 5 end
 
     local grenade_entity = {
         physical = true,
@@ -28,7 +26,7 @@ function grenades.register_grenade(name, def)
         on_step = function(self, dtime)
             local pos = self.object:getpos()
             local node = minetest.get_node(pos)
-            local player
+            local obj = self.object
 
             if self.timer then
                 self.timer = self.timer + dtime
@@ -36,20 +34,29 @@ function grenades.register_grenade(name, def)
                 self.timer = dtime
             end
 
-            if self.thrower_name then
-                player = minetest.get_player_by_name(self.thrower_name)
+            if def.particle then
+                minetest.add_particle({
+                    pos = obj:get_pos(),
+                    velocity = vector.divide(obj:get_velocity(), 2),
+                    acceleration = vector.divide(obj:get_acceleration(), -5),
+                    expirationtime = def.particle.life,
+                    size = def.particle.size,
+                    collisiondetection = true,
+                    collision_removal = true,
+                    vertical = false,
+                    texture = def.particle.image,
+                    glow = def.particle.glow
+                })
             end
-    
-            if player and (self.timer > def.timeout or node.name ~= "air") then
-                def.on_explode(pos, player, self)
 
-                self.object:remove()
-            elseif self.timer > def.timeout or node.name ~= "air" then
-                self.object:remove()
+            if self.timer > def.timeout or node.name ~= "air" then
+                def.on_explode(pos, self.thrower_name)
+
+                obj:remove()
             end
         end
     }
-    
+
     minetest.register_entity("grenades:grenade_"..name, grenade_entity)
 
     if def.placeable == true then
@@ -70,7 +77,6 @@ function grenades.register_grenade(name, def)
             groups = {oddly_breakable_by_hand = 2},
             on_use = function(itemstack, user, pointed_thing)
                 local player_name = user:get_player_name()
-                local inv = user:get_inventory()
 
                 if pointed_thing.type ~= "node" then
                     local grenade = throw_grenade("grenades:grenade_"..name, user)
@@ -93,7 +99,6 @@ function grenades.register_grenade(name, def)
             inventory_image = def.image,
             on_use = function(itemstack, user, pointed_thing)
                 local player_name = user:get_player_name()
-                local inv = user:get_inventory()
 
                 if pointed_thing.type ~= "node" then
                     local grenade = throw_grenade("grenades:grenade_"..name, user)
@@ -107,15 +112,6 @@ function grenades.register_grenade(name, def)
 
                 return itemstack
             end
-        })
-    end
-
-    if def.recipe and (not settings:get_bool("enable_grenade_recipes") or 
-        settings:get_bool("enable_grenade_recipes") == true) then
-        minetest.register_craft({
-            type = def.type,
-            output = "grenades:grenade_"..name,
-            recipe = def.recipe
         })
     end
 end
