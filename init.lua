@@ -28,13 +28,19 @@ function grenades.register_grenade(name, def)
             local node = minetest.get_node(pos)
             local obj = self.object
 
+            if self.particle == nil then
+                self.particle = 0
+            end
+
             if self.timer then
                 self.timer = self.timer + dtime
             else
                 self.timer = dtime
             end
 
-            if def.particle then
+            if def.particle and self.particle >= 4 then
+                self.particle = 0
+
                 minetest.add_particle({
                     pos = obj:get_pos(),
                     velocity = vector.divide(obj:get_velocity(), 2),
@@ -47,6 +53,8 @@ function grenades.register_grenade(name, def)
                     texture = def.particle.image,
                     glow = def.particle.glow
                 })
+            elseif def.particle and self.particle < def.particle.interval then
+                self.particle = self.particle + 1
             end
 
             if self.timer > def.timeout or node.name ~= "air" then

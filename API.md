@@ -18,6 +18,7 @@ Still WIP. Please suggest new features here: https://forum.minetest.net/viewtopi
             image = "grenades_smoke.png", -- The particle's image
             life = 1, -- How long (seconds) it takes for the particle to disappear
             size = 4, -- Size of the particle
-            glow = 0, -- brightens the texture in darkness
+            glow = 0, -- Brightens the texture in darkness
+            interval = 5, -- How long it takes before a particle can be added
         }
 	})`

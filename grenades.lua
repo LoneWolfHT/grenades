@@ -116,6 +116,7 @@ if not smoke or smoke == true then
             life = 1,
             size = 4,
             glow = 0,
+            interval = 5,
         }
     })
 end
@@ -130,7 +131,7 @@ if not settings:get_bool("enable_grenade_recipes") or settings:get_bool("enable_
 
     if not regular or regular == true then
         minetest.register_craft({
-            type = "shapeless",
+            type = "shaped",
             output = "grenades:grenade_regular",
             recipe = {
                 {"", "default:steel_ingot", ""},
@@ -144,7 +145,7 @@ if not settings:get_bool("enable_grenade_recipes") or settings:get_bool("enable_
 
     if not smoke or smoke == true then
         minetest.register_craft({
-            type = "shapeless",
+            type = "shaped",
             output = "grenades:grenade_smoke",
             recipe = {
                 {"", "default:steel_ingot", ""},
@@ -158,7 +159,7 @@ if not settings:get_bool("enable_grenade_recipes") or settings:get_bool("enable_
 
     if not flash or flash == true then
         minetest.register_craft({
-            type = "shapeless",
+            type = "shaped",
             output = "grenades:grenade_flashbang",
             recipe = {
                 {"", "default:steel_ingot", ""},
