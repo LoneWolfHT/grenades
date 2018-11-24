@@ -52,38 +52,63 @@ function grenades.register_grenade(name, def)
     
     minetest.register_entity("grenades:grenade_"..name, grenade_entity)
 
-    minetest.register_node("grenades:grenade_"..name, {
-        description = def.description,
-        stack_max = 1,
-        range = 4,
-        paramtype = "light",
-        sunlight_propagates = true,
-        walkable = false,
-        drawtype = "plantlike",
-        selection_box = {
-            type = "fixed",
-            fixed = {-0.3, -0.5, -0.3, 0.3, 0.4, 0.3},
-        },
-        tiles = {def.image},
-        inventory_image = def.image,
-        groups = {oddly_breakable_by_hand = 1},
-        on_use = function(itemstack, user, pointed_thing)
-            local player_name = user:get_player_name()
-            local inv = user:get_inventory()
+    if def.placeable == true then
+        minetest.register_node("grenades:grenade_"..name, {
+            description = def.description,
+            stack_max = 1,
+            range = 4,
+            paramtype = "light",
+            sunlight_propagates = true,
+            walkable = false,
+            drawtype = "plantlike",
+            selection_box = {
+                type = "fixed",
+                fixed = {-0.3, -0.5, -0.3, 0.3, 0.4, 0.3},
+            },
+            tiles = {def.image},
+            inventory_image = def.image,
+            groups = {oddly_breakable_by_hand = 2},
+            on_use = function(itemstack, user, pointed_thing)
+                local player_name = user:get_player_name()
+                local inv = user:get_inventory()
 
-            if pointed_thing.type ~= "node" then
-                local grenade = throw_grenade("grenades:grenade_"..name, user)
-                grenade.timer = 0
-                grenade.thrower_name = player_name
+                if pointed_thing.type ~= "node" then
+                    local grenade = throw_grenade("grenades:grenade_"..name, user)
+                    grenade.timer = 0
+                    grenade.thrower_name = player_name
 
-                if not minetest.setting_getbool("creative_mode") then
-                    itemstack = ""
+                    if not minetest.setting_getbool("creative_mode") then
+                        itemstack = ""
+                    end
                 end
-            end
 
-            return itemstack
-        end
-    })
+                return itemstack
+            end
+        })
+    else
+        minetest.register_craftitem("grenades:grenade_"..name, {
+            description = def.description,
+            stack_max = 1,
+            range = 4,
+            inventory_image = def.image,
+            on_use = function(itemstack, user, pointed_thing)
+                local player_name = user:get_player_name()
+                local inv = user:get_inventory()
+
+                if pointed_thing.type ~= "node" then
+                    local grenade = throw_grenade("grenades:grenade_"..name, user)
+                    grenade.timer = 0
+                    grenade.thrower_name = player_name
+
+                    if not minetest.setting_getbool("creative_mode") then
+                        itemstack = ""
+                    end
+                end
+
+                return itemstack
+            end
+        })
+    end
 
     if def.recipe and (not settings:get_bool("enable_grenade_recipes") or 
         settings:get_bool("enable_grenade_recipes") == true) then
