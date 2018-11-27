@@ -15,10 +15,10 @@ Still WIP. Please suggest new features here: https://forum.minetest.net/viewtopi
 		placeable = false, -- Optional, default is false
 		timeout = 5, -- Optional, default is 5
 		particle = { -- Adds particles in the grenade's trail
-            image = "grenades_smoke.png", -- The particle's image
-            life = 1, -- How long (seconds) it takes for the particle to disappear
-            size = 4, -- Size of the particle
-            glow = 0, -- Brightens the texture in darkness
-            interval = 5, -- How long it takes before a particle can be added
-        }
+		    image = "grenades_smoke.png", -- The particle's image
+		    life = 1, -- How long (seconds) it takes for the particle to disappear
+		    size = 4, -- Size of the particle
+		    glow = 0, -- Brightens the texture in darkness
+		    interval = 5, -- How long it takes before a particle can be added
+		}
 	})`
