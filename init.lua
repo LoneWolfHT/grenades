@@ -3,53 +3,84 @@ grenades = {}
 local function throw_grenade(name, player)
 	local dir = player:get_look_dir()
 	local pos = player:get_pos()
-	local obj = minetest.add_entity({x = pos.x + dir.x, y = pos.y + 1.6, z = pos.z + dir.z}, name)
+	local obj = minetest.add_entity({x = pos.x + dir.x, y = pos.y + 1.8, z = pos.z + dir.z}, name)
+	local self = obj:get_luaentity()
 
-	obj:set_velocity({x = dir.x * 40, y = dir.y * 40, z = dir.z * 40})
-	obj:set_acceleration({x = dir.x * -12, y = -41, z = dir.z * -12})
+	obj:set_velocity(vector.add(player:get_player_velocity(), {x = dir.x * 40, y = dir.y * 30, z = dir.z * 40}))
+	obj:set_acceleration(vector.add(player:get_player_velocity(), {x = 0, y = -41, z = 0}))
+	self.dir = dir
 
 	return(obj:get_luaentity())
 end
 
 function grenades.register_grenade(name, def)
-	if not def.timeout then
-		def.timeout = 5
+	if not def.clock then
+		def.clock = 3
 	end
 
 	local grenade_entity = {
-		physical = false,
+		physical = true,
 		collide_with_objects = true,
 		timer = 0,
 		visual = "sprite",
-		visual_size = {x = 1, y = 1, z = 1},
+		visual_size = {x = 0.5, y = 0.5, z = 0.5},
 		textures = {def.image},
-		collisionbox = {1, 1, 1, 1, 1, 1},
+		collisionbox = {-0.2, -0.2, -0.2, 0.2, 0.15, 0.2},
+		pointable = false,
+		static_save = false,
+		particle = 0,
 		on_step = function(self, dtime)
 			local obj = self.object
+			local vel = obj:get_velocity()
 			local pos = obj:get_pos()
-			local node = minetest.get_node(vector.add(pos, vector.normalize(obj:get_velocity())))
 
-			if self.particle == nil then
-				self.particle = 0
+			self.timer = self.timer + dtime
+
+			if not self.last_vel then
+				self.last_vel = vel
 			end
 
-			if self.timer then
-				self.timer = self.timer + dtime
-			else
-				self.timer = dtime
+			-- Collision Check
+
+			if not vector.equals(self.last_vel, vel) and vector.distance(self.last_vel, vel) > 3.5 then
+				if math.abs(self.last_vel.z) - 5 > math.abs(vel.z) then
+					self.last_vel.z = self.last_vel.z * -0.5
+				end
+
+				if math.abs(self.last_vel.x) - 5 > math.abs(vel.x) then
+					self.last_vel.x = self.last_vel.x * -0.5
+				end
+
+				if self.last_vel.y <= -5 then
+					self.last_vel.y = self.last_vel.y * -0.3
+				end
+
+				obj:set_velocity(self.last_vel)
+				vel = obj:get_velocity()
 			end
+
+			-- Fix accel bug
+
+			vel.x = vel.x / 1.07
+
+			vel.z = vel.z / 1.07
+
+			obj:set_velocity(vel)
+			self.last_vel = vel
+
+			-- Grenade Particles
 
 			if def.particle and self.particle >= 4 then
 				self.particle = 0
 
 				minetest.add_particle({
 					pos = obj:get_pos(),
-					velocity = vector.divide(obj:get_velocity(), 2),
+					velocity = vector.divide(vel, 2),
 					acceleration = vector.divide(obj:get_acceleration(), -5),
 					expirationtime = def.particle.life,
 					size = def.particle.size,
-					collisiondetection = true,
-					collision_removal = true,
+					collisiondetection = false,
+					collision_removal = false,
 					vertical = false,
 					texture = def.particle.image,
 					glow = def.particle.glow
@@ -58,15 +89,13 @@ function grenades.register_grenade(name, def)
 				self.particle = self.particle + 1
 			end
 
-			if self.timer > def.timeout or node.name ~= "air" then
-                if self.thrower_name then
+			-- Explode when clock is up
+
+			if self.timer > def.clock or not self.thrower_name then
+				if self.thrower_name then
 					minetest.log("[Grenades] A grenade thrown by "..self.thrower_name..
 					" is exploding at "..minetest.pos_to_string(pos))
                     def.on_explode(pos, self.thrower_name)
-                else
-                    minetest.chat_send_all(minetest.colorize("red", "[Error] self.thrower_name on line 62"..
-                    " (grenades/init.lua) was nil. Removing grenade"))
-                    minetest.log("[Error] self.thrower_name on line 62 (grenades/init.lua) was nil. Removing grenade")
                 end
 
 				obj:remove()
@@ -74,19 +103,19 @@ function grenades.register_grenade(name, def)
 		end
 	}
 
-	minetest.register_entity("grenades:grenade_"..name, grenade_entity)
+	minetest.register_entity(name, grenade_entity)
 
 	local newdef = {}
 
 	newdef.description = def.description
 	newdef.stack_max = 1
-	newdef.range = 4
+	newdef.range = 2
 	newdef.inventory_image = def.image
 	newdef.on_use = function(itemstack, user, pointed_thing)
 		local player_name = user:get_player_name()
 
 		if pointed_thing.type ~= "node" then
-			local grenade = throw_grenade("grenades:grenade_"..name, user)
+			local grenade = throw_grenade(name, user)
 			grenade.timer = 0
 			grenade.thrower_name = player_name
 
@@ -111,10 +140,9 @@ function grenades.register_grenade(name, def)
 		newdef.walkable = false
 		newdef.drawtype = "plantlike"
 
-		minetest.register_node("grenades:grenade_"..name, newdef)
+		minetest.register_node(name, newdef)
 	else
-		minetest.register_craftitem("grenades:grenade_"..name, newdef)
+		minetest.register_craftitem(name, newdef)
 	end
 end
 
-dofile(minetest.get_modpath("grenades").."/grenades.lua")
