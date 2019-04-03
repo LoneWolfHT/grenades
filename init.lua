@@ -146,3 +146,48 @@ function grenades.register_grenade(name, def)
 	end
 end
 
+minetest.register_craftitem("grenades:notice_flashbang", {
+	description = "[Flashbang] This mod no longer adds grenades. Please get 'grenades_basic' to restore your items\n"..
+	"Once the mod is added you can punch the air with this notice to turn it into the grenade it was before",
+	range = 0,
+	inventory_image = "grenades_notice.png",
+	stack_max = 1,
+	on_use = function()
+		if minetest.get_modpath("grenades_basic") then
+			return "grenades_basic:flashbang"
+		end
+	end
+})
+
+minetest.register_alias("grenades:grenade_flashbang", "grenades:notice_flashbang")
+
+minetest.register_craftitem("grenades:notice_regular", {
+	description = "[Regular Grenade] This mod no longer adds grenades. Please get 'grenades_basic' to restore "..
+	"your items\n"..
+	"Once the mod is added you can punch the air with this notice to turn it into the grenade it was before",
+	inventory_image = "grenades_notice.png",
+	range = 0,
+	stack_max = 1,
+	on_use = function()
+		if minetest.get_modpath("grenades_basic") then
+			return "grenades_basic:regular"
+		end
+	end
+})
+
+minetest.register_alias("grenades:grenade_regular", "grenades:notice_regular")
+
+minetest.register_craftitem("grenades:notice_smoke", {
+	description = "[Smoke] This mod no longer adds grenades. Please get 'grenades_basic' to restore your items\n"..
+	"Once the mod is added you can punch the air with this notice to turn it into the grenade it was before",
+	range = 0,
+	inventory_image = "grenades_notice.png",
+	stack_max = 1,
+	on_use = function()
+		if minetest.get_modpath("grenades_basic") then
+			return "grenades_basic:smoke"
+		end
+	end
+})
+
+minetest.register_alias("grenades:grenade_smoke", "grenades:notice_smoke")

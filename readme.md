@@ -1,6 +1,5 @@
 # grenades
-Adds a grenade API and a few grenades to Minetest
+Adds a grenade API to Minetest
+See grenades_basic for some basic grenades
 
 License of code: **MIT**
-
-License of sound and textures: **CC-BY**

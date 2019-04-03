@@ -13,7 +13,7 @@ Still WIP. Please suggest new features here: https://forum.minetest.net/viewtopi
 			-- <name> the name of the player that threw the grenade
 		end,
 		placeable = false, -- Optional, default is false
-		timeout = 5, -- Optional, default is 5
+		clock = 3, -- Optional, controls how long until grenade detonates. Default is 3
 		particle = { -- Adds particles in the grenade's trail
 		    image = "grenades_smoke.png", -- The particle's image
 		    life = 1, -- How long (seconds) it takes for the particle to disappear
