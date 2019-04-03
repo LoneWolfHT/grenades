@@ -151,6 +151,7 @@ minetest.register_craftitem("grenades:notice_flashbang", {
 	"Once the mod is added you can punch the air with this notice to turn it into the grenade it was before",
 	range = 0,
 	inventory_image = "grenades_notice.png",
+	groups = {not_in_creative_inventory = 1},
 	stack_max = 1,
 	on_use = function()
 		if minetest.get_modpath("grenades_basic") then
@@ -166,6 +167,7 @@ minetest.register_craftitem("grenades:notice_regular", {
 	"your items\n"..
 	"Once the mod is added you can punch the air with this notice to turn it into the grenade it was before",
 	inventory_image = "grenades_notice.png",
+	groups = {not_in_creative_inventory = 1},
 	range = 0,
 	stack_max = 1,
 	on_use = function()
@@ -182,6 +184,7 @@ minetest.register_craftitem("grenades:notice_smoke", {
 	"Once the mod is added you can punch the air with this notice to turn it into the grenade it was before",
 	range = 0,
 	inventory_image = "grenades_notice.png",
+	groups = {not_in_creative_inventory = 1},
 	stack_max = 1,
 	on_use = function()
 		if minetest.get_modpath("grenades_basic") then
