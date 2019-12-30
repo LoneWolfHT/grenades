@@ -1,38 +1,41 @@
-grenades = {}
+grenades = {
+	grenade_accel = 13
+}
 
 local function throw_grenade(name, player)
 	local dir = player:get_look_dir()
 	local pos = player:get_pos()
-	local obj = minetest.add_entity({x = pos.x + dir.x, y = pos.y + 1.8, z = pos.z + dir.z}, name)
-	local self = obj:get_luaentity()
+	local obj = minetest.add_entity({x = pos.x + dir.x, y = pos.y + 1.6, z = pos.z + dir.z}, name)
 
-	obj:set_velocity(vector.add(player:get_player_velocity(), {x = dir.x * 40, y = dir.y * 30, z = dir.z * 40}))
-	obj:set_acceleration(vector.add(player:get_player_velocity(), {x = 0, y = -41, z = 0}))
-	self.dir = dir
+	local m = 30
+	obj:set_velocity({x = dir.x * m, y = dir.y * m/1.5, z = dir.z * m})
+	obj:set_acceleration({x = 0, y = -13, z = 0})
 
 	return(obj:get_luaentity())
 end
 
 function grenades.register_grenade(name, def)
 	if not def.clock then
-		def.clock = 3
+		def.clock = 4
 	end
 
 	local grenade_entity = {
 		physical = true,
+		sliding = 1,
 		collide_with_objects = true,
-		timer = 0,
 		visual = "sprite",
 		visual_size = {x = 0.5, y = 0.5, z = 0.5},
 		textures = {def.image},
-		collisionbox = {-0.2, -0.2, -0.2, 0.2, 0.15, 0.2},
+		collisionbox = {-0.2, -0.3, -0.2, 0.2, 0.15, 0.2},
 		pointable = false,
 		static_save = false,
 		particle = 0,
+		timer = 0,
 		on_step = function(self, dtime)
 			local obj = self.object
 			local vel = obj:get_velocity()
 			local pos = obj:get_pos()
+			local norm_vel -- Normalized velocity
 
 			self.timer = self.timer + dtime
 
@@ -40,33 +43,47 @@ function grenades.register_grenade(name, def)
 				self.last_vel = vel
 			end
 
-			-- Collision Check
+			-- Check for a collision on the x/y/z axis
 
-			if not vector.equals(self.last_vel, vel) and vector.distance(self.last_vel, vel) > 3.5 then
-				if math.abs(self.last_vel.z) - 5 > math.abs(vel.z) then
-					self.last_vel.z = self.last_vel.z * -0.5
+			if not vector.equals(self.last_vel, vel) and vector.distance(self.last_vel, vel) > 4 then
+				if math.abs(self.last_vel.x - vel.x) > 5 then -- Check for a large reduction in velocity
+					vel.x = self.last_vel.x * -0.3 -- Invert velocity and reduce it a bit
 				end
 
-				if math.abs(self.last_vel.x) - 5 > math.abs(vel.x) then
-					self.last_vel.x = self.last_vel.x * -0.5
+				if math.abs(self.last_vel.y - vel.y) > 5 then -- Check for a large reduction in velocity
+					vel.y = self.last_vel.y * -0.2 -- Invert velocity and reduce it a bit
 				end
 
-				if self.last_vel.y <= -5 then
-					self.last_vel.y = self.last_vel.y * -0.3
+				if math.abs(self.last_vel.z - vel.z) > 5 then -- Check for a large reduction in velocity
+					vel.z = self.last_vel.z * -0.3 -- Invert velocity and reduce it a bit
 				end
 
-				obj:set_velocity(self.last_vel)
-				vel = obj:get_velocity()
+				obj:set_velocity(vel)
 			end
 
-			-- Fix accel bug
-
-			vel.x = vel.x / 1.07
-
-			vel.z = vel.z / 1.07
-
-			obj:set_velocity(vel)
 			self.last_vel = vel
+
+			if self.sliding == 1 and vel.y == 0 then -- Check if grenade is sliding
+				self.sliding = 2 -- Multiplies drag by 2
+			elseif self.sliding > 1 and vel.y ~= 0 then
+				self.sliding = 1 -- Doesn't affect drag
+			end
+
+			if self.sliding > 1 then -- Is the grenade sliding?
+				if vector.distance(vector.new(), vel) <= 1 and not vector.equals(vel, vector.new()) then -- Grenade is barely moving
+					obj:set_velocity(vector.new(0, -9.8, 0)) -- Make sure it stays unmoving
+					obj:set_acceleration(vector.new())
+				end
+			else
+				norm_vel = vector.normalize(vel)
+
+				obj:set_acceleration({
+					x = -norm_vel.x * grenades.grenade_accel * self.sliding,
+					y = -9.8,
+					z = -norm_vel.z * grenades.grenade_accel * self.sliding,
+				})
+			end
+
 
 			-- Grenade Particles
 
@@ -93,10 +110,10 @@ function grenades.register_grenade(name, def)
 
 			if self.timer > def.clock or not self.thrower_name then
 				if self.thrower_name then
-					minetest.log("[Grenades] A grenade thrown by "..self.thrower_name..
-					" is exploding at "..minetest.pos_to_string(pos))
-                    def.on_explode(pos, self.thrower_name)
-                end
+					minetest.log("[Grenades] A grenade thrown by " .. self.thrower_name ..
+					" explodes at " .. minetest.pos_to_string(vector.round(pos)))
+					def.on_explode(pos, self.thrower_name)
+				end
 
 				obj:remove()
 			end
@@ -109,14 +126,13 @@ function grenades.register_grenade(name, def)
 
 	newdef.description = def.description
 	newdef.stack_max = 1
-	newdef.range = 2
+	newdef.range = 0
 	newdef.inventory_image = def.image
 	newdef.on_use = function(itemstack, user, pointed_thing)
 		local player_name = user:get_player_name()
 
 		if pointed_thing.type ~= "node" then
 			local grenade = throw_grenade(name, user)
-			grenade.timer = 0
 			grenade.thrower_name = player_name
 
 			if not minetest.settings:get_bool("creative_mode") then
@@ -144,53 +160,6 @@ function grenades.register_grenade(name, def)
 	else
 		minetest.register_craftitem(name, newdef)
 	end
+
+	minetest.register_craftitem(name, newdef)
 end
-
-minetest.register_craftitem("grenades:notice_flashbang", {
-	description = "[Flashbang] This mod no longer adds grenades. Please get 'grenades_basic' to restore your items\n"..
-	"Once the mod is added you can punch the air with this notice to turn it into the grenade it was before",
-	range = 0,
-	inventory_image = "grenades_notice.png",
-	groups = {not_in_creative_inventory = 1},
-	stack_max = 1,
-	on_use = function()
-		if minetest.get_modpath("grenades_basic") then
-			return "grenades_basic:flashbang"
-		end
-	end
-})
-
-minetest.register_alias("grenades:grenade_flashbang", "grenades:notice_flashbang")
-
-minetest.register_craftitem("grenades:notice_regular", {
-	description = "[Regular Grenade] This mod no longer adds grenades. Please get 'grenades_basic' to restore "..
-	"your items\n"..
-	"Once the mod is added you can punch the air with this notice to turn it into the grenade it was before",
-	inventory_image = "grenades_notice.png",
-	groups = {not_in_creative_inventory = 1},
-	range = 0,
-	stack_max = 1,
-	on_use = function()
-		if minetest.get_modpath("grenades_basic") then
-			return "grenades_basic:regular"
-		end
-	end
-})
-
-minetest.register_alias("grenades:grenade_regular", "grenades:notice_regular")
-
-minetest.register_craftitem("grenades:notice_smoke", {
-	description = "[Smoke] This mod no longer adds grenades. Please get 'grenades_basic' to restore your items\n"..
-	"Once the mod is added you can punch the air with this notice to turn it into the grenade it was before",
-	range = 0,
-	inventory_image = "grenades_notice.png",
-	groups = {not_in_creative_inventory = 1},
-	stack_max = 1,
-	on_use = function()
-		if minetest.get_modpath("grenades_basic") then
-			return "grenades_basic:smoke"
-		end
-	end
-})
-
-minetest.register_alias("grenades:grenade_smoke", "grenades:notice_smoke")
